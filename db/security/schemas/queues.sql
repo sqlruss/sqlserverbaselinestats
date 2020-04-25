@@ -1,0 +1,3 @@
+CREATE SCHEMA [Queues]
+AUTHORIZATION [dbo]
+GO
