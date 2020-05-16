@@ -1,3 +1,8 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+
 CREATE PROCEDURE [Queues].[GetCounterValuesForGrafana]
 @ServerName NVARCHAR(50), 
 @CounterGroup VARCHAR(200), 
@@ -5,7 +10,8 @@ CREATE PROCEDURE [Queues].[GetCounterValuesForGrafana]
 @StartTime DATETIME2(0), 
 @EndTime DATETIME2(0)
 AS
-BEGIN
+SET XACT_ABORT, NOCOUNT ON;
+BEGIN TRY
 
     /*REGION - if counter is specific to named instance, update CounterGroup name*/
         DECLARE @NamedInstanceMetricPrefix VARCHAR(50) = 'mssql$' + STUFF(@ServerName,1,CHARINDEX('\',@ServerName),'')
@@ -139,5 +145,10 @@ BEGIN
                                                 AND [time] <= @EndTime
                                         ORDER BY [time] ASC
                                     END  
-END
+END TRY
+BEGIN CATCH
+	IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION
+	EXEC dbo.error_handler_sp
+	RETURN 55555
+END CATCH
 GO
